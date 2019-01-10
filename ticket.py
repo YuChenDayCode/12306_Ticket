@@ -159,7 +159,7 @@ with open('./city.json', encoding='utf-8') as f:
 TicketDTO={} # 封装请求参数
 def initTicketDTO():
     TicketDTO['train_date']='2019-01-11'
-    TicketDTO['from_station']=CITY_DATA['杭州']
+    TicketDTO['from_station'] = CITY_DATA['杭州']
     TicketDTO['to_station']= CITY_DATA['重庆北']
 
 
