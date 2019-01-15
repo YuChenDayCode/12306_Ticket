@@ -46,6 +46,7 @@ def getQR():
 
         login_pic = getImage(base64.b64decode(json_result['image']))
         Image.open(login_pic).show()  # 依赖PIL库，打开图片(会创建一个零食文件打开图片，图片未被占用时销毁)
+
 def getImage(img):
     filepath = './login.png'
     with open(filepath, 'wb') as fd:  # w写入 b二进制形式
@@ -77,20 +78,28 @@ def checkuser():
     data = post(url, {"_json_att: ": ""})
     json_result = json.loads(data)
     print(json_result)
+    if json_result['status']:
+        return json_result['data']['flag']
+    return False
 
 #扫码之后验证
 def auth():
     try:
+        getCookie()
+
         data = post('https://kyfw.12306.cn/passport/web/auth/uamtk',
                     {"appid": "otn"})
         json_result = json.loads(data)
+        if(json_result['result_code']==1):
+            getQR()
+            auth()
+            return
         authinfo = post('https://kyfw.12306.cn/otn/uamauthclient',
                         {"tk": json_result['newapptk']})
         json_result = json.loads(authinfo)
         if(json_result['result_code']==0):#登陆成功后保存cookie
             saveCookie() 
             print("登陆成功，用户名："+json_result["username"])
-            
     except json.decoder.JSONDecodeError: # 转json失败 一般就是验证失败了 回来的一般是让你登陆的
         print('验证失败')
 
@@ -117,18 +126,15 @@ def getCookie():
 select_ticket_URL = 'leftTicket/queryA'  # 查票的地址是在queryA、queryZ啥的随机变化的
 #查票
 def select_ticket():
-    train_date = TicketDTO['train_date'] # 日期
-    from_station = TicketDTO['from_station']  # 起点站
-    to_station = TicketDTO['to_station']  # 终点站
+    initTicketDTO()
     global select_ticket_URL  # 查询的query后会随机变成AZ什么的
     url = 'https://kyfw.12306.cn/otn/'+select_ticket_URL +\
-        '?leftTicketDTO.train_date='+train_date + \
-        '&leftTicketDTO.from_station='+from_station +\
-        '&leftTicketDTO.to_station='+to_station+'&purpose_codes=ADULT'  # ADULT：普通票
+        '?leftTicketDTO.train_date='+TicketDTO['train_date'] + \
+        '&leftTicketDTO.from_station='+ TicketDTO['from_station'] +\
+        '&leftTicketDTO.to_station='+TicketDTO['to_station'] +'&purpose_codes=ADULT'  # ADULT：普通票
     data = get(url)
 
     json_result = json.loads(data)
-    print(json_result)
     if(not json_result['status']):
         select_ticket_URL = json_result['c_url']
         select_ticket()
@@ -142,8 +148,63 @@ def select_ticket():
         TrainNum = classes[3]  # 班次
         FirstSeat = classes[31]  # 一等座
         SecondSeat = Convert(classes[30])   # 二等座
-        print(canBuy+"=> 班次："+TrainNum+" 历程：" + classes[13]+" "+city_info[classes[6]]+"=>"+city_info[classes[7]] +" "+classes[8]+"-" + classes[9]+"["+classes[10] + "h] 一等座："+str(FirstSeat)+" 二等座："+str(SecondSeat))
-   
+        #print(canBuy+"=> 班次："+TrainNum+" 历程：" + classes[13]+" "+city_info[classes[6]]+"=>"+city_info[classes[7]] +" "+classes[8]+"-" + classes[9]+"["+classes[10] + "h] 一等座："+str(FirstSeat)+" 二等座："+str(SecondSeat))
+        if(TrainNum in TicketDTO['class']):
+            print(TrainNum+"：二等座余票："+str(SecondSeat))
+            if(IsEnable and canBuy == 'Y'):  # 有提交信息 并且可以购买
+                print('检测到余票，正在提交')
+                if(SecondSeat > 0):
+                    submitOrderRequest(secretStr)
+
+
+# 检测是否有未完成的订单
+def submitOrderRequest(secretStr):
+    if(checkuser()):  # 下单前需要先检查登陆
+        reqdata = {
+            "secretStr": secretStr,
+            "train_date": TicketDTO['train_date'],
+            "back_train_date": time.strftime('%Y-%m-%d', time.localtime(time.time())),
+            "tour_flag": 'dc',
+            "purpose_codes": 'ADULT',
+            "query_from_station_name": TicketDTO['from_station_name'],
+            "query_to_station_name": TicketDTO['to_station_name'],
+            "undefined": ''
+        }
+        url = 'https://kyfw.12306.cn/otn/leftTicket/submitOrderRequest'
+        data = post(url, reqdata)
+        json_result = json.loads(data)
+        if(json_result['data'] == 'N' and json_result['status']):  # 无未完成的订单
+            getPassenge()
+        else:
+            print('有未完成订单')
+
+# 获取购票人
+def getPassenge():
+    html_data = post('https://kyfw.12306.cn/otn/confirmPassenger/initDc',
+                     {"_json_att: ": ""})  # 点预定的时候需要先初始化一下 获取token 用于获取购票人
+    REPEAT_SUBMIT_TOKEN = re.findall(re.compile(
+        "var globalRepeatSubmitToken = '(.*?)';", re.S), html_data)
+    key_check_isChange=re.findall(re.compile(
+        "'key_check_isChange':'(.*?)',", re.S), html_data)
+    leftTicketStr =re.findall(re.compile(
+        "'leftTicketStr':'(.*?)',", re.S), html_data)
+    json_initDc ={
+        'REPEAT_SUBMIT_TOKEN':REPEAT_SUBMIT_TOKEN,
+        'key_check_isChange':key_check_isChange,
+        'leftTicketStr':leftTicketStr
+    }
+
+    url = 'https://kyfw.12306.cn/otn/confirmPassenger/getPassengerDTOs'
+    reqdata = {
+        "_json_att: ": "",
+        "REPEAT_SUBMIT_TOKEN": REPEAT_SUBMIT_TOKEN[0]
+    }
+    data = post(url, reqdata)
+    json_result = json.loads(data)
+    print("购票人数据：")
+    for item in json_result['data']['normal_passengers']:
+        print(item)
+
 
 def Convert(val):
     if(val == '无' or val == ''):
@@ -158,13 +219,23 @@ with open('./city.json', encoding='utf-8') as f:
 
 TicketDTO={} # 封装请求参数
 def initTicketDTO():
-    TicketDTO['train_date']='2019-01-13'
-    TicketDTO['from_station'] = CITY_DATA['杭州']
-    TicketDTO['to_station']= CITY_DATA['重庆北']
-    TicketDTO['class']=['D2222']
+    TicketDTO['train_date']='2019-02-10'
+    TicketDTO['from_station_name']='重庆'
+    TicketDTO['to_station_name']='潼南'
+    TicketDTO['class']=['D5147']
     TicketDTO['passenger'] =['陈震']
-
+    
+    TicketDTO['from_station'] = CITY_DATA[TicketDTO['from_station_name']]
+    TicketDTO['to_station']= CITY_DATA[TicketDTO['to_station_name']]
+   
 if __name__ == "__main__":
+    auth()
+    select_ticket()
+'''
+    getPassenge()
+
+
     initTicketDTO()
     print(TicketDTO)
     select_ticket()
+'''
