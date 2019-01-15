@@ -203,8 +203,9 @@ def getPassenge():
     json_result = json.loads(data)
     print("购票人数据：")
     for item in json_result['data']['normal_passengers']:
-        print(item)
-
+        if item['passenger_name'] in TicketDTO['holder']:
+            TicketDTO['Passenger'].append(item)
+    print(TicketDTO['Passenger'])
 
 def Convert(val):
     if(val == '无' or val == ''):
@@ -223,7 +224,7 @@ def initTicketDTO():
     TicketDTO['from_station_name']='重庆'
     TicketDTO['to_station_name']='潼南'
     TicketDTO['class']=['D5147']
-    TicketDTO['passenger'] =['']
+    TicketDTO['holder'] =['']
     
     TicketDTO['from_station'] = CITY_DATA[TicketDTO['from_station_name']]
     TicketDTO['to_station']= CITY_DATA[TicketDTO['to_station_name']]
