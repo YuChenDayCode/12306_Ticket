@@ -223,7 +223,7 @@ def initTicketDTO():
     TicketDTO['from_station_name']='重庆'
     TicketDTO['to_station_name']='潼南'
     TicketDTO['class']=['D5147']
-    TicketDTO['passenger'] =['陈震']
+    TicketDTO['passenger'] =['']
     
     TicketDTO['from_station'] = CITY_DATA[TicketDTO['from_station_name']]
     TicketDTO['to_station']= CITY_DATA[TicketDTO['to_station_name']]
