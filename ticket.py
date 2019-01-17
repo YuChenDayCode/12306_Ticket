@@ -15,11 +15,10 @@ urllib3.disable_warnings()
 session = requests.Session()  # session会话对象，请求和返回的信息保存在session中
 session.verify = False
 
-
-def get(url):
-    header = {
+header = {
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0"
     }
+def get(url,headers=header):
     reqs = session.get(url, headers=header)
     reqs.encoding = 'UTF-8-SIG'
     if(reqs.text.find('网络可能存在问题') > -1 or reqs.text.find('您选择的日期不在预售期范围内') > -1):
@@ -28,10 +27,7 @@ def get(url):
     return reqs.text
 
 
-def post(url, data):
-    header = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0"
-    }
+def post(url, data,headers=header):
     reqs = session.post(url, headers=header, data=data)
     reqs.encoding = 'UTF-8-SIG'
     if(reqs.text.find('网络可能存在问题') > -1 or reqs.text.find('您选择的日期不在预售期范围内') > -1):
@@ -151,14 +147,18 @@ def auth():
         print('验证失败')
 
 
-select_ticket_URL = 'leftTicket/queryA'  # 查票的地址是在queryA、queryZ啥的随机变化的
+#select_ticket_URL = 'leftTicket/queryA'  # 查票的地址是在queryA、queryZ啥的随机变化的
 # 查票
 
 
 def select_ticket():
     initTicketDTO()
-    global select_ticket_URL  # 查询的query后会随机变成AZ什么的
-    url = 'https://kyfw.12306.cn/otn/'+select_ticket_URL +\
+    initurl='https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc&fs='+TicketDTO['from_station_name']+','+TicketDTO['from_station']+'&ts='+ TicketDTO['to_station_name']+','+TicketDTO['to_station']+'&date='+TicketDTO['train_date'] +'&flag=N,N,Y'
+    html_data = get(initurl)
+    select_ticket_URL = re.findall(re.compile(
+        "var CLeftTicketUrl = '(.*?)';", re.S), html_data)
+    #global select_ticket_URL  # 查询的query后会随机变成AZ什么的
+    url = 'https://kyfw.12306.cn/otn/'+select_ticket_URL[0] +\
         '?leftTicketDTO.train_date='+TicketDTO['train_date'] + \
         '&leftTicketDTO.from_station=' + TicketDTO['from_station'] +\
         '&leftTicketDTO.to_station='+TicketDTO['to_station'] +\
@@ -166,11 +166,13 @@ def select_ticket():
     data = get(url)
 
     json_result = json.loads(data)
+    '''
     if(not json_result['status']):
         select_ticket_URL = json_result['c_url']
         select_ticket()
         return
-    city_info = json_result['data']['map']  # 城市信息
+    '''
+    #city_info = json_result['data']['map']  # 城市信息
     for item in json_result['data']['result']:
         classes = item.split('|')  # 被竖线隔开的
         canBuy = classes[11]  # 是否可购买
@@ -187,11 +189,11 @@ def select_ticket():
                 print('检测到余票，正在提交')
                 NowTrainInfo = {"train_no": train_no, "TrainClass": TrainClass,
                                 "from_station": classes[6], "to_station": classes[7]}
-                print(NowTrainInfo)
+                
                 if(SecondSeat > 0):
                     while True:
                         json_initDc = submitOrderRequest(secretStr)
-                        checkOrderInfo(json_initDc, NowTrainInfo)
+                        checkOrderInfo(json_initDc)
                         time.sleep(2)
 
 
@@ -240,16 +242,16 @@ def getinitDc():
         ",'to_station':'(.*?)',", re.S), html_data)
 
     json_initDc = {
-        'REPEAT_SUBMIT_TOKEN': REPEAT_SUBMIT_TOKEN,
-        'key_check_isChange': key_check_isChange,
-        'leftTicketStr': leftTicketStr,
-        'tour_flag': tour_flag,
-        'purpose_codes': purpose_codes,
-        'train_location': train_location,
-        'train_no': train_no,
-        'station_train_code': station_train_code,
-        'from_station_telecode': from_station_telecode,
-        'to_station': to_station
+        'REPEAT_SUBMIT_TOKEN': REPEAT_SUBMIT_TOKEN[0],
+        'key_check_isChange': key_check_isChange[0],
+        'leftTicketStr': leftTicketStr[0],
+        'tour_flag': tour_flag[0],
+        'purpose_codes': purpose_codes[0],
+        'train_location': train_location[0],
+        'train_no': train_no[0],
+        'station_train_code': station_train_code[0],
+        'from_station_telecode': from_station_telecode[0],
+        'to_station': to_station[0]
     }
     return json_initDc
 
@@ -275,7 +277,7 @@ def getPassenge(REPEAT_SUBMIT_TOKEN):
 
 
 # 买票
-def checkOrderInfo(json_initDc, NowTrainInfo):
+def checkOrderInfo(json_initDc):
     # 检查确定订单信息
     reqdata = {
         'cancel_flag': '2', #固定
@@ -292,20 +294,20 @@ def checkOrderInfo(json_initDc, NowTrainInfo):
     data = post(
         'https://kyfw.12306.cn/otn/confirmPassenger/checkOrderInfo', reqdata)
     json_result = json.loads(data)
+    print(json_result)
     # {"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":{"ifShowPassCode":"N","canChooseBeds":"N","canChooseSeats":"Y","choose_Seats":"O","isCanChooseMid":"N","ifShowPassCodeTime":"1","submitStatus":true,"smokeStr":""},"messages":[],"validateMessages":{}}
     if(not json_result['status']):
         print('no')
         return
 
-    stra = time.strftime("%a+%b+%d+%Y+00:00:00+GMT+0800", time.strptime(
-        TicketDTO['train_date'], "%Y-%m-%d %H:%M:%S"))+'+(中国标准时间)'
+
     # 获取余票
     reqdata = {
-        'train_date': time.strftime("%a+%b+%d+%Y+00:00:00+GMT+0800", time.strptime(TicketDTO['train_date'], "%Y-%m-%d %H:%M:%S"))+'+(中国标准时间)',
+        'train_date': time.strftime("%a+%b+%d+%Y+00:00:00+GMT+0800", time.strptime(TicketDTO['train_date'], "%Y-%m-%d"))+'+(中国标准时间)',
         'train_no': json_initDc['train_no'],  # 班次号
         'stationTrainCode': json_initDc['station_train_code'],  # 车次
-        'seatType': json_result['choose_Seats'],  # ？？ 上面返回的 就是你选座的类型
-        'fromStationTelecode': json_initDc['from_station'],  # 起点终点
+        'seatType': 'O',# json_result['data']['choose_Seats'],  # ？？ 上面返回的 就是你选座的类型 二等座 O
+        'fromStationTelecode': json_initDc['from_station_telecode'],  # 起点终点
         'toStationTelecode': json_initDc['to_station'],
         'leftTicket': json_initDc['leftTicketStr'],
         'purpose_codes': json_initDc['purpose_codes'],  # ?? 姑且认为是固定  没有取不到的参数！
@@ -313,8 +315,21 @@ def checkOrderInfo(json_initDc, NowTrainInfo):
         '_json_att': '',
         'REPEAT_SUBMIT_TOKEN': json_initDc['REPEAT_SUBMIT_TOKEN']
     }
+    time.sleep(5)
     data = post(
-        'https://kyfw.12306.cn/otn/confirmPassenger/getQueueCount', reqdata)
+        'https://kyfw.12306.cn/otn/confirmPassenger/getQueueCount', reqdata,headers={
+            "Accept-Encoding":"gzip, deflate, br",
+            "Connection":"keep-alive",
+            "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0",
+            "Host":"kyfw.12306.cn",
+            "Referer":"https://kyfw.12306.cn/otn/confirmPassenger/initDc"
+        })
+    print(data) 
+    # 怎么都过不去，始终返回{"validateMessagesShowId":"_validatorMessage","url":"/leftTicket/init","status":false,"httpstatus":200,"messages":["系统忙，请稍后重试"],"validateMessages":{}}
+    # 排查一下好像需要调用init 获取一堆cookie 试试 不行。。
+    # 间隔2秒在访问试试 不行
+    # 请求参数编码！！ 试试
+    return
 
     # 请求车票
     reqdata = {
@@ -324,13 +339,13 @@ def checkOrderInfo(json_initDc, NowTrainInfo):
         'purpose_codes': json_initDc['purpose_codes'], 
         'key_check_isChange': json_initDc['key_check_isChange'],
         'leftTicketStr': json_initDc['leftTicketStr'],
-         'train_location': json_initDc['train_location'], 
+        'train_location': json_initDc['train_location'], 
         'choose_seats': '1D',  # ??  选择的座位
         'seatDetailType': '000', # 固定
         'whatsSelect': '1',# 固定
         'roomType': '00',# 固定
         'dwAll': 'N',# 固定
-        '_json_att': '',# 固定
+        '_json_att':'' ,# 固定
         'REPEAT_SUBMIT_TOKEN': json_initDc['REPEAT_SUBMIT_TOKEN']
     }
     data = post(
@@ -341,11 +356,11 @@ TicketDTO = {}  # 封装请求参数
 
 
 def initTicketDTO():
-    TicketDTO['train_date'] = '2019-02-10'
+    TicketDTO['train_date'] = '2019-02-14'
     TicketDTO['from_station_name'] = '重庆'
-    TicketDTO['to_station_name'] = ''
+    TicketDTO['to_station_name'] = '潼南'
     TicketDTO['class'] = ['D5147']
-    TicketDTO['holder'] = ['']
+    TicketDTO['holder'] = ['陈震']
 
     TicketDTO['from_station'] = CITY_DATA[TicketDTO['from_station_name']]
     TicketDTO['to_station'] = CITY_DATA[TicketDTO['to_station_name']]
