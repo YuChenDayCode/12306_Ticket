@@ -16,10 +16,11 @@ session = requests.Session()  # session会话对象，请求和返回的信息�
 session.verify = False
 
 header = {
+        "Connection":"keep-alive",
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0"
     }
 def get(url,headers=header):
-    reqs = session.get(url, headers=header)
+    reqs = session.get(url, headers=headers)
     reqs.encoding = 'UTF-8-SIG'
     if(reqs.text.find('网络可能存在问题') > -1 or reqs.text.find('您选择的日期不在预售期范围内') > -1):
         print('网络可能存在问题')
@@ -28,7 +29,7 @@ def get(url,headers=header):
 
 
 def post(url, data,headers=header):
-    reqs = session.post(url, headers=header, data=data)
+    reqs = session.post(url, headers=headers, data=data)
     reqs.encoding = 'UTF-8-SIG'
     if(reqs.text.find('网络可能存在问题') > -1 or reqs.text.find('您选择的日期不在预售期范围内') > -1):
         print('网络可能存在问题')
@@ -143,6 +144,7 @@ def auth():
         if(json_result['result_code'] == 0):  # 登陆成功后保存cookie
             saveCookie()
             print("登陆成功，用户名："+json_result["username"])
+            select_ticket()
     except json.decoder.JSONDecodeError:  # 转json失败 一般就是验证失败了 回来的一般是让你登陆的
         print('验证失败')
 
@@ -290,7 +292,6 @@ def checkOrderInfo(json_initDc):
         '_json_att': '',  # 为空
         'REPEAT_SUBMIT_TOKEN': json_initDc['REPEAT_SUBMIT_TOKEN']
     }
-
     data = post(
         'https://kyfw.12306.cn/otn/confirmPassenger/checkOrderInfo', reqdata)
     json_result = json.loads(data)
@@ -300,7 +301,7 @@ def checkOrderInfo(json_initDc):
         print('no')
         return
 
-
+    #Thu+Feb+14+2019+00%3A00%3A00+GMT%2B0800+(%E4%B8%AD%E5%9B%BD%E6%A0%87%E5%87%86%E6%97%B6%E9%97%B4)&
     # 获取余票
     reqdata = {
         'train_date': time.strftime("%a+%b+%d+%Y+00:00:00+GMT+0800", time.strptime(TicketDTO['train_date'], "%Y-%m-%d"))+'+(中国标准时间)',
@@ -315,20 +316,28 @@ def checkOrderInfo(json_initDc):
         '_json_att': '',
         'REPEAT_SUBMIT_TOKEN': json_initDc['REPEAT_SUBMIT_TOKEN']
     }
-    time.sleep(5)
+    aa = urllib.parse.urlencode(reqdata).encode('utf-8')
+    bb = 'train_date=Thu+Feb+14+2019+00%3A00%3A00+GMT%2B0800+(%E4%B8%AD%E5%9B%BD%E6%A0%87%E5%87%86%E6%97%B6%E9%97%B4)&train_no=77000D514708&stationTrainCode=D5147&seatType=O&fromStationTelecode=CUW&toStationTelecode=TVW&leftTicket=XOZNDGDLvVioOigkIONQQYCZHlzCLqcJyxSbraclOa735zFw&purpose_codes=00&train_location=W2&_json_att=&REPEAT_SUBMIT_TOKEN=6103e87dd3a3ed870dcdef19602be9b7'
+    _headers= {
+        "Accept":"application/json, text/javascript, */*; q=0.01",
+        "Accept-Encoding":"gzip, deflate, br",
+        "Accept-Language":"zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
+        
+        "Content-Type":"application/x-www-form-urlencoded; charset=UTF-8",
+        "Host":"kyfw.12306.cn",
+        "Referer":"https://kyfw.12306.cn/otn/confirmPassenger/initDc",
+        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0",
+        "X-Requested-With":"XMLHttpRequest"
+    }
     data = post(
-        'https://kyfw.12306.cn/otn/confirmPassenger/getQueueCount', reqdata,headers={
-            "Accept-Encoding":"gzip, deflate, br",
-            "Connection":"keep-alive",
-            "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0",
-            "Host":"kyfw.12306.cn",
-            "Referer":"https://kyfw.12306.cn/otn/confirmPassenger/initDc"
-        })
+        'https://kyfw.12306.cn/otn/confirmPassenger/getQueueCount',reqdata,headers=_headers)
     print(data) 
     # 怎么都过不去，始终返回{"validateMessagesShowId":"_validatorMessage","url":"/leftTicket/init","status":false,"httpstatus":200,"messages":["系统忙，请稍后重试"],"validateMessages":{}}
-    # 排查一下好像需要调用init 获取一堆cookie 试试 不行。。
-    # 间隔2秒在访问试试 不行
-    # 请求参数编码！！ 试试
+    # 排查一下好像需要调用init 获取一堆cookie 试试 不行。。  返回来多半还是参数的问题还是你 
+    # 频繁请求？间隔5秒在访问试试 不行
+    # 请求参数编码！！ 试试 好像也不行
+    # 好像是上一个请求就有问题了 查查
+    # 能确定了，是参数的问题！！！！！ 
     return
 
     # 请求车票
