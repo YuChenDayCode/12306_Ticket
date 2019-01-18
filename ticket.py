@@ -188,15 +188,18 @@ def select_ticket():
         if(TrainClass in TicketDTO['class']):
             print(train_no+"：二等座余票："+str(SecondSeat))
             if(IsEnable and canBuy == 'Y'):  # 有提交信息 并且可以购买
-                print('检测到余票，正在提交')
+                print('可购买，正在提交')
                 NowTrainInfo = {"train_no": train_no, "TrainClass": TrainClass,
                                 "from_station": classes[6], "to_station": classes[7]}
                 
                 if(SecondSeat > 0):
                     while True:
                         json_initDc = submitOrderRequest(secretStr)
-                        checkOrderInfo(json_initDc)
+                        if(type(json_initDc) is dict):
+                            checkOrderInfo(json_initDc)
                         time.sleep(2)
+            else:
+                print('不可购买')
 
 
 # 检测是否有未完成的订单，没有的话获取购票人
@@ -214,10 +217,14 @@ def submitOrderRequest(secretStr):
     url = 'https://kyfw.12306.cn/otn/leftTicket/submitOrderRequest'
     data = post(url, reqdata)
     json_result = json.loads(data)
-    if(json_result['data'] == 'N' and json_result['status']):  # 无未完成的订单\
-        json_initDc = getinitDc()
-        if(getPassenge(json_initDc['REPEAT_SUBMIT_TOKEN'])):
-            return json_initDc
+    if(json_result['status']):
+        if(json_result['data'] == 'N'):  # 无未完成的订单\
+            json_initDc = getinitDc()
+            if(getPassenge(json_initDc['REPEAT_SUBMIT_TOKEN'])):
+                return json_initDc
+    else:
+        print(json_result['messages'])
+        return False
 
 
 def getinitDc():
@@ -269,12 +276,13 @@ def getPassenge(REPEAT_SUBMIT_TOKEN):
         }
         data = post(url, reqdata)
         json_result = json.loads(data)
-        print("购票人数据：")
+       
         for item in json_result['data']['normal_passengers']:
             if item['passenger_name'] in TicketDTO['holder']:
                 TicketDTO['passengerInfo'] = {'passengerTicketStr': 'O,'+item['passenger_flag']+','+item['passenger_type']+','+item['passenger_name']+','+item['passenger_id_type_code']+','+item['passenger_id_no']+','+item['mobile_no']+',N',
                                               'oldPassengerStr': item['passenger_name']+','+item['passenger_id_type_code']+','+item['passenger_id_no'] + ',1_'}
         if(any(TicketDTO['passengerInfo'])):
+            print("购票人数据获取成功")
             return True
 
 
@@ -297,10 +305,12 @@ def checkOrderInfo(json_initDc):
     json_result = json.loads(data)
     print(json_result)
     # {"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":{"ifShowPassCode":"N","canChooseBeds":"N","canChooseSeats":"Y","choose_Seats":"O","isCanChooseMid":"N","ifShowPassCodeTime":"1","submitStatus":true,"smokeStr":""},"messages":[],"validateMessages":{}}
-    if(not json_result['status']):
-        print('no')
+    if(json_result['status']):
+        print('检查订单成功')
+    else:
+        print('检查订单失败'+json_result['messages'])
         return
-
+        
     #Thu+Feb+14+2019+00%3A00%3A00+GMT%2B0800+(%E4%B8%AD%E5%9B%BD%E6%A0%87%E5%87%86%E6%97%B6%E9%97%B4)&
     # 获取余票
     reqdata = {
@@ -316,8 +326,7 @@ def checkOrderInfo(json_initDc):
         '_json_att': '',
         'REPEAT_SUBMIT_TOKEN': json_initDc['REPEAT_SUBMIT_TOKEN']
     }
-    aa = urllib.parse.urlencode(reqdata).encode('utf-8')
-    bb = 'train_date=Thu+Feb+14+2019+00%3A00%3A00+GMT%2B0800+(%E4%B8%AD%E5%9B%BD%E6%A0%87%E5%87%86%E6%97%B6%E9%97%B4)&train_no=77000D514708&stationTrainCode=D5147&seatType=O&fromStationTelecode=CUW&toStationTelecode=TVW&leftTicket=XOZNDGDLvVioOigkIONQQYCZHlzCLqcJyxSbraclOa735zFw&purpose_codes=00&train_location=W2&_json_att=&REPEAT_SUBMIT_TOKEN=6103e87dd3a3ed870dcdef19602be9b7'
+    reqdata_Str= bytes.decode(urllib.parse.urlencode(reqdata).encode('utf-8')).replace('%2B','+').replace('GMT+0800','GMT%2B0800').replace('%28','(').replace('%29',')')
     _headers= {
         "Accept":"application/json, text/javascript, */*; q=0.01",
         "Accept-Encoding":"gzip, deflate, br",
@@ -330,17 +339,25 @@ def checkOrderInfo(json_initDc):
         "X-Requested-With":"XMLHttpRequest"
     }
     data = post(
-        'https://kyfw.12306.cn/otn/confirmPassenger/getQueueCount',reqdata,headers=_headers)
-    print(data) 
+        'https://kyfw.12306.cn/otn/confirmPassenger/getQueueCount',reqdata_Str,headers=_headers)
+    json_result = json.loads(data)
+    if(json_result['status']):
+        print(json_result)
+        print('提交下单信息成功，余票信息：'+json_result['data']['ticket']+'  排队人数：'+json_result['data']['count']) #T估计是票总数
+        if(json_result['data']['op_2']=='true'):
+            print('排队人数超过余票') # 应该需要重新发起请求之类的
+    else:
+        print('提交下单信息失败，'+json_result['messages'])
+        return
     # 怎么都过不去，始终返回{"validateMessagesShowId":"_validatorMessage","url":"/leftTicket/init","status":false,"httpstatus":200,"messages":["系统忙，请稍后重试"],"validateMessages":{}}
+    # 封IP？ 换服务器运行 可以的
     # 排查一下好像需要调用init 获取一堆cookie 试试 不行。。  返回来多半还是参数的问题还是你 
     # 频繁请求？间隔5秒在访问试试 不行
     # 请求参数编码！！ 试试 好像也不行
     # 好像是上一个请求就有问题了 查查
-    # 能确定了，是参数的问题！！！！！ 
-    return
+    # 能确定了，是参数的问题！！！！！  搞定 ！ 参数编码问题 自己拼
 
-    # 请求车票
+    # 选座，确认信息
     reqdata = {
         'passengerTicketStr': TicketDTO['passengerInfo']['passengerTicketStr'],
         'oldPassengerStr': TicketDTO['passengerInfo']['oldPassengerStr'],
@@ -358,18 +375,67 @@ def checkOrderInfo(json_initDc):
         'REPEAT_SUBMIT_TOKEN': json_initDc['REPEAT_SUBMIT_TOKEN']
     }
     data = post(
-        'https://kyfw.12306.cn/otn/confirmPassenger/getQueueCount', reqdata)
+        'https://kyfw.12306.cn/otn/confirmPassenger/confirmSingleForQueue', reqdata)
+    print(data)
+    json_result=json.loads(data)
+    if(json_result['status']):
+        if(json_result['data']['submitStatus']):
+            print('选座成功！')
+            # Email提醒
+    else:
+        print('选座失败。。 '+json_result['messages'])
+        return
+
+
+    # 下单等待确定
+    orderId=''
+    OrderWait_url = 'https://kyfw.12306.cn/otn/confirmPassenger/queryOrderWaitTime?random='+str(int(time.time()*1000))+'&tourFlag=dc&_json_att=&REPEAT_SUBMIT_TOKEN='+json_initDc['REPEAT_SUBMIT_TOKEN']
+    html_data = get(OrderWait_url)
+    json_result = json.loads(html_data) #这边返回的订单ID 需要作为参数
+    print(json_result)
+    if(json_result['status'] and json_result['data']['queryOrderWaitTimeStatus']):
+        print('等待提交订单信息成功')
+        orderId=json_result['data']['orderId']
+        while(orderId==None):
+            time.sleep(json_result['data']['waitTime'])
+            html_data = get(OrderWait_url) #需要等一会才能返回订单的id
+            json_result = json.loads(html_data)
+            print(json_result)
+            if(json_result['status'] and json_result['data']['queryOrderWaitTimeStatus']):orderId=json_result['data']['orderId']
+
+    else:
+        print('等待提交订单信息失败，'+json_result['messages'])
+        return
+
+  
+    # 回执信息
+    reqdata = {
+        'orderSequence_no':orderId,
+        '_json_att':'',
+        'REPEAT_SUBMIT_TOKEN': json_initDc['REPEAT_SUBMIT_TOKEN']
+    }
+    data = post(
+        'https://kyfw.12306.cn/otn/confirmPassenger/resultOrderForDcQueue', reqdata)
+    print(data)
+    json_result = json.loads(data)
+    if(json_result['status']):
+        if(json_result['data']['submitStatus']):
+            print('下单成功！！！！！！！！！去付款吧')
+            # Email提醒
+    else:
+        print('下单失败。。。。。。。 '+json_result['messages'])
+
+
 
 
 TicketDTO = {}  # 封装请求参数
-
 
 def initTicketDTO():
     TicketDTO['train_date'] = '2019-02-14'
     TicketDTO['from_station_name'] = '重庆'
     TicketDTO['to_station_name'] = '潼南'
     TicketDTO['class'] = ['D5147']
-    TicketDTO['holder'] = ['陈震']
+    TicketDTO['holder'] = ['陈']
 
     TicketDTO['from_station'] = CITY_DATA[TicketDTO['from_station_name']]
     TicketDTO['to_station'] = CITY_DATA[TicketDTO['to_station_name']]
@@ -380,11 +446,3 @@ def initTicketDTO():
 if __name__ == "__main__":
     checkuser()
     select_ticket()
-'''
-    getPassenge()
-
-
-    initTicketDTO()
-    print(TicketDTO)
-    select_ticket()
-'''
