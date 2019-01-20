@@ -28,7 +28,7 @@
 返回：{"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":"N","messages":[],"validateMessages":{}}
 (```)
 
-###https://kyfw.12306.cn/otn/confirmPassenger/initDc #获取一堆参数 后面的请求需要用到
+###https://kyfw.12306.cn/otn/confirmPassenger/initDc #获取一堆参数 后面的请求需要用到   
 (```)
 参数：{
         _json_att：''
@@ -36,7 +36,7 @@
 返回的是一个页面，需要用正则去取数据
 (```)
 
-###3.https://kyfw.12306.cn/otn/confirmPassenger/getPassengerDTOs # 获取购票人信息 (乘车人信息)
+###3.https://kyfw.12306.cn/otn/confirmPassenger/getPassengerDTOs # 获取购票人信息 (乘车人信息)  
 (```)
 参数：{
         _json_att:'',
@@ -45,9 +45,9 @@
 返回：{"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":{"notify_for_gat":"","isExist":true,"exMsg":"","two_isOpenClick":["93","95","97","99"],"other_isOpenClick":["91","93","98","99","95","97"],"normal_passengers":[{"code":"2","passenger_name":"XX","sex_code":"M","sex_name":"男","born_date":"199....","country_code":"CN","passenger_id_type_code":"1","passenger_id_type_name":"中国居民身份证","passenger_id_no":"500223....","passenger_type":"1","passenger_flag":"0","passenger_type_name":"成人","mobile_no":"13...","phone_no":"","email":"...@qq.com","address":"","postalcode":"","first_letter":"CZ","recordCount":"7","total_times":"99","index_id":"0","gat_born_date":"","gat_valid_date_start":"","gat_valid_date_end":"","gat_version":""},{"code":"1","passenger_name":"XX","sex_code":"M","sex_name":"男","born_date":"2016-02-14 00:00:00","country_code":"CN","passenger_id_type_code":"1","passenger_id_type_name":"中国居民身份证","passenger_id_no":"500230....","passenger_type":"1","passenger_flag":"0","passenger_type_name":"成人","mobile_no":"","phone_no":"","email":"","address":"","postalcode":"","first_letter":"AJ","recordCount":"7","total_times":"99","index_id":"1","gat_born_date":"","gat_valid_date_start":"","gat_valid_date_end":"","gat_version":""},{"code":"4","passenger_name":"XXX","sex_code":"F","sex_name":"女","born_date":"1900-01-01 00:00:00","country_code":"CN","passenger_id_type_code":"1","passenger_id_type_name":"中国居民身份证","passenger_id_no":"511602........","passenger_type":"1","passenger_flag":"0","passenger_type_name":"成人","mobile_no":"15.....","phone_no":"","email":"","address":"","postalcode":"","first_letter":"DYM","recordCount":"7","total_times":"99","index_id":"3","gat_born_date":"","gat_valid_date_start":"","gat_valid_date_end":"","gat_version":""}]},"messages":[],"validateMessages":{}}
 (```)
 
-
-###4.https://kyfw.12306.cn/otn/confirmPassenger/checkOrderInfo # 检查订单信息 (是否能购票，是否有未支付的订单）
-(```)
+ 
+###4.https://kyfw.12306.cn/otn/confirmPassenger/checkOrderInfo # 检查订单信息 (是否能购票，是否有未支付的订单）   
+(```)   
 参数:{
     cancel_flag:2
     bed_level_order_num:000000000000000000000000000000
@@ -80,7 +80,7 @@
 返回:{"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":{"count":"0","ticket":"463,85","op_2":"false","countT":"0","op_1":"false"},"messages":[],"validateMessages":{}}
 (```)
 
-###6.https://kyfw.12306.cn/otn/confirmPassenger/confirmSingleForQueue #选座提交
+###6.https://kyfw.12306.cn/otn/confirmPassenger/confirmSingleForQueue #选座提交  
 (```)
 参数：{
         passengerTicketStr:O,0,1,XX,1,500....,132.....,N   # 拼接的购票人信息
@@ -101,7 +101,7 @@
 返回:{"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":{"submitStatus":true},"messages":[],"validateMessages":{}}
 (```)
 
-###7.https://kyfw.12306.cn/otn/confirmPassenger/queryOrderWaitTime?random=1547780170175&tourFlag=dc&_json_att=&REPEAT_SUBMIT_TOKEN=a8dc2ed1a814b3067cfc32550c17e0ed # 排队
+###7.https://kyfw.12306.cn/otn/confirmPassenger/queryOrderWaitTime?random=1547780170175&tourFlag=dc&_json_att=&REPEAT_SUBMIT_TOKEN=a8dc2ed1a814b3067cfc32550c17e0ed # 排队   
 (```)
 参数:{
         random	1547780170175 #秒级时间戳
@@ -112,7 +112,7 @@
 返回：{"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":{"queryOrderWaitTimeStatus":true,"count":0,"waitTime":-1,"requestId":6491860556856379439,"waitCount":0,"tourFlag":"dc","orderId":"E702546392"},"messages":[],"validateMessages":{}}
 (```)
 
-###8.https://kyfw.12306.cn/otn/confirmPassenger/resultOrderForDcQueue # 确定下单成功
+###8.https://kyfw.12306.cn/otn/confirmPassenger/resultOrderForDcQueue # 确定下单成功   
 (```)
 参数{
         orderSequence_no:E702546390  #上一步返回的订单id
