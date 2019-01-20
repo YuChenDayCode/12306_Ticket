@@ -14,7 +14,8 @@ https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&
 返回：{"data":{"flag":"1","map":{"CUW":"重庆北","CXW":"重庆西","TVW":"潼南"},"result":["|列车运行图调整,暂停发售|77000D51030J|D5103|CXW|ICW|CXW|TVW|24:00|24:00|99:59|IS_TIME_NOT_BUY||20190214||W3|01|03|0|1|||||||||||||||||0|0|null","|列车运行图调整,暂停发售|77000D51170A|D5117|CUW|NIW|CUW|TVW|24:00|24:00|99:59|IS_TIME_NOT_BUY||20190214||W2|01|03|0|1|||||||||||||||||0|0|null","IQEEzf7ymvboXyZSxb%2Bvno%2FvYNEZbmuqDINQp%2Bmnh3k4f0fECt06bHNQPKk4Hlpp8k%2FEY%2FHY1hMb%0Aua7x0jZi61wrCfaoT%2FPBfZMLd4iBVRZurosYHAz0E191H6A5Imnmwng39zx10jq6Bj5eBTTWbH4U%0Ag5a1RfO85IpYBCUAfwSajgMxulbU63F6m2rH%2Bn3QV2djAIrKzIDYwjfdFAuLAfzMa5Sb0cV3nEG7%0AnW43VHcCPF9qB%2BvHUSuHaQcbaHdYztBgPpKcWEXeSXZ0Hekt8%2BIORs8NXs%2FMiGi%2FLkbi5NdZYb%2BJ%0Ax36wYA%3D%3D|预订|710000K1420H|K143|NNZ|CDW|CXW|TVW|09:18|10:36|01:18|Y|t47JENLelAwrUH8jO7aObclgoEFHNBYIMu9USdXqyieI0PymUpkzmENrhno%3D|20190213|3|Z1|11|12|0|0||||2|||有||有|16|||||10401030|1413|0|0|null","MUyH%2FHTEfnPsZwsT%2B2JzqnO21xQ5sGp0nnfSH52Dxg82ZvrybT7nChBhBxb3TsvMjtJyUJx89uNQ%0AMCrH9ekzbik0zw54JI4FG7uavZBLFJwJFKM6jXIhI6akPir9cafU%2BO07Fq2oHvjihljCWeydEtMq%0AHltj9Cl6HqKGR9xxZS1UsSAWqyjFBxPFLPFkPjn1LwFH%2FnvW1li%2FMEDeRugFkjsdIzBNPnrhDB3I%0A%2Bi022Xdvfv8XW3YA0vrhyYKwZU%2FGAR52EgfaJAMKGomYC%2F6HFjCas%2BCl8big1Vkw%2FuIAObayl7Is%0AtwecSA%3D%3D|预订|710000K8720H|K873|ZJZ|............."]},"httpstatus":200,"messages":"","status":true}
 ```
 
-### 2.https://kyfw.12306.cn/otn/leftTicket/submitOrderRequest # 提交下单请求   
+### 2.提交下单请求
+https://kyfw.12306.cn/otn/leftTicket/submitOrderRequest
 ```
 参数：{
         secretStr:NwCfMpWhQYGrv9zKy/E2bJHhqOoVHXTgo5hTboBBIe/Kzro2zxrnAiA4x1lswwh5upe5V31vZwXQuv7gxy...  # 这个参数是第一步查询的第一个参数，那趟车可买票的时候才会有这个参数
@@ -29,7 +30,8 @@ https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&
 返回：{"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":"N","messages":[],"validateMessages":{}}
 ```
 
-### https://kyfw.12306.cn/otn/confirmPassenger/initDc #获取一堆参数 后面的请求需要用到   
+### 获取一堆参数 后面的请求需要用到   
+https://kyfw.12306.cn/otn/confirmPassenger/initDc
 ```
 参数：{
         _json_att：''
@@ -37,7 +39,8 @@ https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&
 返回的是一个页面，需要用正则去取数据
 ```
 
-### 3.https://kyfw.12306.cn/otn/confirmPassenger/getPassengerDTOs # 获取购票人信息 (乘车人信息)  
+### 3. 获取购票人信息 (乘车人信息)  
+https://kyfw.12306.cn/otn/confirmPassenger/getPassengerDTOs
 ```
 参数：{
         _json_att:'',
@@ -47,7 +50,8 @@ https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&
 ```
 
  
-### 4.https://kyfw.12306.cn/otn/confirmPassenger/checkOrderInfo # 检查订单信息 (是否能购票，是否有未支付的订单）   
+### 4. 检查订单信息 (是否能购票，是否有未支付的订单）   
+https://kyfw.12306.cn/otn/confirmPassenger/checkOrderInfo
 ```
 参数:{
     cancel_flag:2
@@ -63,7 +67,8 @@ https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&
 返回:{"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":{"ifShowPassCode":"N","canChooseBeds":"N","canChooseSeats":"Y","choose_Seats":"OM","isCanChooseMid":"N","ifShowPassCodeTime":"1","submitStatus":true,"smokeStr":""},"messages":[],"validateMessages":{}}
 ```
 
-### 5.https://kyfw.12306.cn/otn/confirmPassenger/getQueueCount # 获取余票，与排队人数
+### 5. 获取余票，与排队人数
+https://kyfw.12306.cn/otn/confirmPassenger/getQueueCount
 ```
 参数{
         train_date:Thu+Feb+14+2019+00:00:00+GMT+0800+(中国标准时间) #购票时间格式化出来的
@@ -81,7 +86,8 @@ https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&
 返回:{"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":{"count":"0","ticket":"463,85","op_2":"false","countT":"0","op_1":"false"},"messages":[],"validateMessages":{}}
 ```
 
-### 6.https://kyfw.12306.cn/otn/confirmPassenger/confirmSingleForQueue #选座提交  
+### 6.选座提交  
+https://kyfw.12306.cn/otn/confirmPassenger/confirmSingleForQueue
 ```
 参数：{
         passengerTicketStr:O,0,1,XX,1,500....,132.....,N   # 拼接的购票人信息
@@ -102,7 +108,8 @@ https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&
 返回:{"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":{"submitStatus":true},"messages":[],"validateMessages":{}}
 ```
 
-### 7.https://kyfw.12306.cn/otn/confirmPassenger/queryOrderWaitTime?random=1547780170175&tourFlag=dc&_json_att=&REPEAT_SUBMIT_TOKEN=a8dc2ed1a814b3067cfc32550c17e0ed # 排队   
+### 7.排队   
+https://kyfw.12306.cn/otn/confirmPassenger/queryOrderWaitTime?random=1547780170175&tourFlag=dc&_json_att=&REPEAT_SUBMIT_TOKEN=a8dc2ed1a814b3067cfc32550c17e0ed
 ```
 参数:{
         random	1547780170175 #秒级时间戳
@@ -113,7 +120,8 @@ https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&
 返回：{"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":{"queryOrderWaitTimeStatus":true,"count":0,"waitTime":-1,"requestId":6491860556856379439,"waitCount":0,"tourFlag":"dc","orderId":"E702546392"},"messages":[],"validateMessages":{}}
 ```
 
-### 8.https://kyfw.12306.cn/otn/confirmPassenger/resultOrderForDcQueue # 确定下单成功   
+### 8.确定下单成功   
+https://kyfw.12306.cn/otn/confirmPassenger/resultOrderForDcQueue
 ```
 参数{
         orderSequence_no:E702546390  #上一步返回的订单id
