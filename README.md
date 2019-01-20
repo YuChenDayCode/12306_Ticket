@@ -4,7 +4,7 @@
 步骤
 ### 1.查询
 https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&leftTicketDTO.from_station=CQW&leftTicketDTO.to_station=TVW&purpose_codes=ADULT
-'''javascript
+```
 参数：{
         leftTicketDTO.train_date:2019-02-14  #购票日期
         leftTicketDTO.from_station:CQW #起点站
@@ -12,7 +12,7 @@ https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&
         purpose_codes:ADULT #购票类型，ADULT代表单程
       }
 返回：{"data":{"flag":"1","map":{"CUW":"重庆北","CXW":"重庆西","TVW":"潼南"},"result":["|列车运行图调整,暂停发售|77000D51030J|D5103|CXW|ICW|CXW|TVW|24:00|24:00|99:59|IS_TIME_NOT_BUY||20190214||W3|01|03|0|1|||||||||||||||||0|0|null","|列车运行图调整,暂停发售|77000D51170A|D5117|CUW|NIW|CUW|TVW|24:00|24:00|99:59|IS_TIME_NOT_BUY||20190214||W2|01|03|0|1|||||||||||||||||0|0|null","IQEEzf7ymvboXyZSxb%2Bvno%2FvYNEZbmuqDINQp%2Bmnh3k4f0fECt06bHNQPKk4Hlpp8k%2FEY%2FHY1hMb%0Aua7x0jZi61wrCfaoT%2FPBfZMLd4iBVRZurosYHAz0E191H6A5Imnmwng39zx10jq6Bj5eBTTWbH4U%0Ag5a1RfO85IpYBCUAfwSajgMxulbU63F6m2rH%2Bn3QV2djAIrKzIDYwjfdFAuLAfzMa5Sb0cV3nEG7%0AnW43VHcCPF9qB%2BvHUSuHaQcbaHdYztBgPpKcWEXeSXZ0Hekt8%2BIORs8NXs%2FMiGi%2FLkbi5NdZYb%2BJ%0Ax36wYA%3D%3D|预订|710000K1420H|K143|NNZ|CDW|CXW|TVW|09:18|10:36|01:18|Y|t47JENLelAwrUH8jO7aObclgoEFHNBYIMu9USdXqyieI0PymUpkzmENrhno%3D|20190213|3|Z1|11|12|0|0||||2|||有||有|16|||||10401030|1413|0|0|null","MUyH%2FHTEfnPsZwsT%2B2JzqnO21xQ5sGp0nnfSH52Dxg82ZvrybT7nChBhBxb3TsvMjtJyUJx89uNQ%0AMCrH9ekzbik0zw54JI4FG7uavZBLFJwJFKM6jXIhI6akPir9cafU%2BO07Fq2oHvjihljCWeydEtMq%0AHltj9Cl6HqKGR9xxZS1UsSAWqyjFBxPFLPFkPjn1LwFH%2FnvW1li%2FMEDeRugFkjsdIzBNPnrhDB3I%0A%2Bi022Xdvfv8XW3YA0vrhyYKwZU%2FGAR52EgfaJAMKGomYC%2F6HFjCas%2BCl8big1Vkw%2FuIAObayl7Is%0AtwecSA%3D%3D|预订|710000K8720H|K873|ZJZ|............."]},"httpstatus":200,"messages":"","status":true}
-'''
+```
 
 ### 2.https://kyfw.12306.cn/otn/leftTicket/submitOrderRequest # 提交下单请求   
 '''
