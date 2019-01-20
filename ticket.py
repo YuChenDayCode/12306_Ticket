@@ -45,12 +45,9 @@ def Convert(val):
     return int(val)
 
 
-with open('./city.json', encoding='utf-8') as f:
-    CITY_DATA = json.load(f)
+
 
 # 保存cookie
-
-
 def saveCookie():
     _cookies = session.cookies.get_dict()
     # 取到session的cookie信息 取出来是键值对把他转化成字符串类型保存下来
@@ -149,49 +146,38 @@ def auth():
         print('验证失败')
 
 
-#select_ticket_URL = 'leftTicket/queryA'  # 查票的地址是在queryA、queryZ啥的随机变化的
+select_ticket_URL = 'leftTicket/queryA'  # 查票的地址是在queryA、queryZ啥的随机变化的
 # 查票
-
-
 def select_ticket():
     initTicketDTO()
-    initurl='https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc&fs='+TicketDTO['from_station_name']+','+TicketDTO['from_station']+'&ts='+ TicketDTO['to_station_name']+','+TicketDTO['to_station']+'&date='+TicketDTO['train_date'] +'&flag=N,N,Y'
-    html_data = get(initurl)
-    select_ticket_URL = re.findall(re.compile(
-        "var CLeftTicketUrl = '(.*?)';", re.S), html_data)
-    #global select_ticket_URL  # 查询的query后会随机变成AZ什么的
-    url = 'https://kyfw.12306.cn/otn/'+select_ticket_URL[0] +\
+    global select_ticket_URL  # 查询的query后会随机变成AZ什么的 可以从查询的初始化界面leftTicket/init中获取
+    url = 'https://kyfw.12306.cn/otn/'+select_ticket_URL +\
         '?leftTicketDTO.train_date='+TicketDTO['train_date'] + \
         '&leftTicketDTO.from_station=' + TicketDTO['from_station'] +\
         '&leftTicketDTO.to_station='+TicketDTO['to_station'] +\
-        '&purpose_codes=ADULT'  # ADULT：普通票
+        '&purpose_codes=ADULT'  # ADULT：单程普通票
     data = get(url)
 
     json_result = json.loads(data)
-    '''
     if(not json_result['status']):
         select_ticket_URL = json_result['c_url']
         select_ticket()
         return
-    '''
-    #city_info = json_result['data']['map']  # 城市信息
+    city_info = json_result['data']['map']  # 城市信息
     for item in json_result['data']['result']:
         classes = item.split('|')  # 被竖线隔开的
         canBuy = classes[11]  # 是否可购买
         secretStr = urllib.request.unquote(classes[0])  # 下单信息
         IsEnable = (classes[0] == "" and False or True)  # 有无预定信息
-        train_no = classes[2]  # 班次
+        train_no = classes[2]  # 车次
         TrainClass = classes[3]  # 班次
         FirstSeat = classes[31]  # 一等座
         SecondSeat = Convert(classes[30])   # 二等座
-        #print(canBuy+"=> 班次："+TrainClass+" 历程：" + classes[13]+" "+city_info[classes[6]]+"=>"+city_info[classes[7]] + " "+classes[8]+"-" + classes[9]+"["+classes[10] + "h] 一等座："+str(FirstSeat)+" 二等座："+str(SecondSeat))
+        print(canBuy+"=> 班次："+TrainClass+" 历程：" + classes[13]+" "+city_info[classes[6]]+"=>"+city_info[classes[7]] + " "+classes[8]+"-" + classes[9]+"["+classes[10] + "h] 一等座："+str(FirstSeat)+" 二等座："+str(SecondSeat))
         if(TrainClass in TicketDTO['class']):
             print(train_no+"：二等座余票："+str(SecondSeat))
             if(IsEnable and canBuy == 'Y'):  # 有提交信息 并且可以购买
                 print('可购买，正在提交')
-                NowTrainInfo = {"train_no": train_no, "TrainClass": TrainClass,
-                                "from_station": classes[6], "to_station": classes[7]}
-                
                 if(SecondSeat > 0):
                     while True:
                         json_initDc = submitOrderRequest(secretStr)
@@ -266,7 +252,7 @@ def getinitDc():
 
 
 def getPassenge(REPEAT_SUBMIT_TOKEN):
-    if(any(TicketDTO['passengerInfo'])):
+    if(any(TicketDTO['passengerInfo'])): #如果获取过了就直接返回
         return True
     else:
         url = 'https://kyfw.12306.cn/otn/confirmPassenger/getPassengerDTOs'
@@ -280,7 +266,7 @@ def getPassenge(REPEAT_SUBMIT_TOKEN):
         for item in json_result['data']['normal_passengers']:
             if item['passenger_name'] in TicketDTO['holder']:
                 TicketDTO['passengerInfo'] = {'passengerTicketStr': 'O,'+item['passenger_flag']+','+item['passenger_type']+','+item['passenger_name']+','+item['passenger_id_type_code']+','+item['passenger_id_no']+','+item['mobile_no']+',N',
-                                              'oldPassengerStr': item['passenger_name']+','+item['passenger_id_type_code']+','+item['passenger_id_no'] + ',1_'}
+                                              'oldPassengerStr': item['passenger_name']+','+item['passenger_id_type_code']+','+item['passenger_id_no'] + ',1_'} # 拼接下面要用到的参数
         if(any(TicketDTO['passengerInfo'])):
             print("购票人数据获取成功")
             return True
@@ -304,7 +290,6 @@ def checkOrderInfo(json_initDc):
         'https://kyfw.12306.cn/otn/confirmPassenger/checkOrderInfo', reqdata)
     json_result = json.loads(data)
     print(json_result)
-    # {"validateMessagesShowId":"_validatorMessage","status":true,"httpstatus":200,"data":{"ifShowPassCode":"N","canChooseBeds":"N","canChooseSeats":"Y","choose_Seats":"O","isCanChooseMid":"N","ifShowPassCodeTime":"1","submitStatus":true,"smokeStr":""},"messages":[],"validateMessages":{}}
     if(json_result['status']):
         print('检查订单成功')
     else:
@@ -351,7 +336,7 @@ def checkOrderInfo(json_initDc):
         return
     # 怎么都过不去，始终返回{"validateMessagesShowId":"_validatorMessage","url":"/leftTicket/init","status":false,"httpstatus":200,"messages":["系统忙，请稍后重试"],"validateMessages":{}}
     # 封IP？ 换服务器运行 可以的
-    # 排查一下好像需要调用init 获取一堆cookie 试试 不行。。  返回来多半还是参数的问题还是你 
+    # 排查一下好像需要调用init 获取一堆cookie 试试 不行。。     返回来多半还是参数的问题还是你 
     # 频繁请求？间隔5秒在访问试试 不行
     # 请求参数编码！！ 试试 好像也不行
     # 好像是上一个请求就有问题了 查查
@@ -381,7 +366,6 @@ def checkOrderInfo(json_initDc):
     if(json_result['status']):
         if(json_result['data']['submitStatus']):
             print('选座成功！')
-            # Email提醒
     else:
         print('选座失败。。 '+json_result['messages'])
         return
@@ -429,18 +413,19 @@ def checkOrderInfo(json_initDc):
 
 
 TicketDTO = {}  # 封装请求参数
-
 def initTicketDTO():
-    TicketDTO['train_date'] = '2019-02-14'
-    TicketDTO['from_station_name'] = '重庆'
-    TicketDTO['to_station_name'] = '潼南'
-    TicketDTO['class'] = ['D5147']
-    TicketDTO['holder'] = ['陈']
+    with open('./city.json', encoding='utf-8') as f:
+        CITY_DATA = json.load(f)
+    TicketDTO['train_date'] = '2019-02-14' #日期
+    TicketDTO['from_station_name'] = '重庆' #起点站
+    TicketDTO['to_station_name'] = '潼南' #终点站
+    TicketDTO['class'] = ['D5147'] #想购买车次  支持多个
+    TicketDTO['holder'] = ['陈'] #谁买票 目前只支持单人
 
-    TicketDTO['from_station'] = CITY_DATA[TicketDTO['from_station_name']]
-    TicketDTO['to_station'] = CITY_DATA[TicketDTO['to_station_name']]
+    TicketDTO['from_station'] = CITY_DATA[TicketDTO['from_station_name']] #起点站转换的简码
+    TicketDTO['to_station'] = CITY_DATA[TicketDTO['to_station_name']] #终点站简码
 
-    TicketDTO['passengerInfo'] = {}
+    TicketDTO['passengerInfo'] = {} #购票人信息
 
 
 if __name__ == "__main__":
