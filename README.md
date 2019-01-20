@@ -2,8 +2,9 @@
 ## 12306
 
 步骤
-### 1.https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&leftTicketDTO.from_station=CQW&leftTicketDTO.to_station=TVW&purpose_codes=ADULT # 查询   
-'''
+### 1.查询
+https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=2019-02-14&leftTicketDTO.from_station=CQW&leftTicketDTO.to_station=TVW&purpose_codes=ADULT
+''' javascropt
 参数：{
         leftTicketDTO.train_date:2019-02-14  #购票日期
         leftTicketDTO.from_station:CQW #起点站
