@@ -56,8 +56,8 @@ https://kyfw.12306.cn/otn/confirmPassenger/checkOrderInfo
 参数:{
     cancel_flag:2
     bed_level_order_num:000000000000000000000000000000
-    passengerTicketStr:O,0,1,陈震,1,500223199304258858,13220367145,N
-    oldPassengerStr:陈震,1,500223199304258858,1_
+    passengerTicketStr:O,0,1,陈x,1,500222222......,1322....,N
+    oldPassengerStr:xx,1,50022222222.....,1_
     tour_flag:dc
     randCode:''
     whatsSelect:1
